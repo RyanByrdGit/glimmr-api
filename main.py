@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import uvicorn
 import requests
 import os
@@ -53,7 +54,7 @@ def get_real_offers():
     
     except Exception as e:
         print("ERROR:", str(e))
-        return [{"error": str(e)}, 500]
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/jobs")
 def get_jobs():
@@ -65,4 +66,5 @@ def deploy_job():
     return {"status": "Job deployed successfully", "job_id": 1259}
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
