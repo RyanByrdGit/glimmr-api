@@ -17,44 +17,28 @@ app.add_middleware(
 )
 
 @app.get("/offers")
-def get_real_offers():
-    VAST_API_KEY = os.getenv("VAST_API_KEY")
-    try:
-        headers = {
-            "Authorization": f"Bearer {VAST_API_KEY}"
+def get_mock_offers():
+    offers = [
+        {
+            "id": "10001",
+            "gpu": "RTX 3090",
+            "price": "$0.25/hr",
+            "ram": "24 GB"
+        },
+        {
+            "id": "10002",
+            "gpu": "A100",
+            "price": "$0.65/hr",
+            "ram": "40 GB"
+        },
+        {
+            "id": "10003",
+            "gpu": "RTX 4080",
+            "price": "$0.45/hr",
+            "ram": "16 GB"
         }
-        params = {
-            "verified": "true",
-            "order": "dph",
-            "dir": "asc",
-            "limit": 5
-        }
-
-        res = requests.get("https://api.vast.ai/api/v0/offers", headers=headers, params=params)
-
-        print("STATUS:", res.status_code)
-        print("HEADERS:", res.headers)
-        print("TEXT:", res.text)
-
-        if "application/json" in res.headers.get("Content-Type", ""):
-            raw = res.json()
-        else:
-            raise ValueError("Non-JSON response received")
-
-        offers = []
-        for offer in raw.get("offers", []):
-            offers.append({
-                "id": offer.get("id"),
-                "gpu": offer.get("gpu_name"),
-                "price": f"${offer.get('dph_total_usd', 0):.2f}/hr",
-                "ram": f"{offer.get('ram', 0)} GB"
-            })
-
-        return {"offers": offers}
-    
-    except Exception as e:
-        print("ERROR:", str(e))
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    ]
+    return {"offers": offers}
 
 @app.get("/jobs")
 def get_jobs():
