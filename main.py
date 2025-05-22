@@ -13,20 +13,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-mock_offers = [
-    {"id": "9201685", "gpu": "RTX 3090", "price": "$0.35/hr", "ram": "11 GB"},
-    {"id": "9201743", "gpu": "A5000", "price": "$0.45/hr", "ram": "24 GB"},
-    {"id": "9202024", "gpu": "A100", "price": "$0.95/hr", "ram": "40 GB"},
-]
-
-mock_jobs = [
-    {"id": 1258, "description": "Test image generation on offer 9201685", "status": "Succeeded"},
-    {"id": 1257, "description": "Test LLM run on offer 9202024", "status": "Succeeded"}
-]
-
 @app.get("/offers")
-def get_offers():
-    return {"offers": mock_offers}
+def get_real_offers():
+    headers = {
+        "Authorization": f"Bearer {VAST_API_KEY}"
+    }
+    params = {
+        "verified": "true",
+        "order": "dph",
+        "dir": "asc",
+        "limit": 5
+    }
+    res = requests.get("https://vast.ai/api/v0/offers", headers=headers, params=params)
+    raw = res.json()
+    offers = []
+
+    for offer in raw.get("offers", []):
+        offers.append({
+            "id": offer.get("id"),
+            "gpu": offer.get("gpu_name"),
+            "price": f"${offer.get('dph_total_usd', 0):.2f}/hr",
+            "ram": f"{offer.get('ram', 0)} GB"
+        })
+
+    return {"offers": offers}
 
 @app.get("/jobs")
 def get_jobs():
