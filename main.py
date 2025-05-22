@@ -38,6 +38,10 @@ def get_real_offers():
 
     return {"offers": offers}
 
+     except Exception as e:
+        print("ERROR:", e)
+        return {"error": "Something went wrong"}, 500
+
 @app.get("/jobs")
 def get_jobs():
     return {"jobs": mock_jobs}
