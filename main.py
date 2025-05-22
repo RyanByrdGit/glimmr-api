@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import requests
+import os
 
 app = FastAPI()
 
@@ -16,8 +17,8 @@ app.add_middleware(
 
 @app.get("/offers")
 def get_real_offers():
+    VAST_API_KEY = os.getenv("VAST_API_KEY")
     try:
-        VAST_API_KEY = "your_api_key_here"  # Replace with your actual API key or load from env
         headers = {
             "Authorization": f"Bearer {VAST_API_KEY}"
         }
@@ -27,10 +28,19 @@ def get_real_offers():
             "dir": "asc",
             "limit": 5
         }
-        res = requests.get("https://vast.ai/api/v0/offers", headers=headers, params=params)
-        raw = res.json()
-        offers = []
 
+        res = requests.get("https://api.vast.ai/api/v0/offers", headers=headers, params=params)
+
+        print("STATUS:", res.status_code)
+        print("HEADERS:", res.headers)
+        print("TEXT:", res.text)
+
+        if "application/json" in res.headers.get("Content-Type", ""):
+            raw = res.json()
+        else:
+            raise ValueError("Non-JSON response received")
+
+        offers = []
         for offer in raw.get("offers", []):
             offers.append({
                 "id": offer.get("id"),
@@ -40,12 +50,14 @@ def get_real_offers():
             })
 
         return {"offers": offers}
+    
     except Exception as e:
-        print("ERROR:", e)
-        return {"error": "Something went wrong"}, 500
+        print("ERROR:", str(e))
+        return [{"error": str(e)}, 500]
 
 @app.get("/jobs")
 def get_jobs():
+    mock_jobs = []  # Define mock_jobs or replace with actual data source
     return {"jobs": mock_jobs}
 
 @app.post("/deploy")
