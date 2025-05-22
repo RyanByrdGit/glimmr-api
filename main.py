@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import requests
 
 app = FastAPI()
 
@@ -15,30 +16,31 @@ app.add_middleware(
 
 @app.get("/offers")
 def get_real_offers():
-    headers = {
-        "Authorization": f"Bearer {VAST_API_KEY}"
-    }
-    params = {
-        "verified": "true",
-        "order": "dph",
-        "dir": "asc",
-        "limit": 5
-    }
-    res = requests.get("https://vast.ai/api/v0/offers", headers=headers, params=params)
-    raw = res.json()
-    offers = []
+    try:
+        VAST_API_KEY = "your_api_key_here"  # Replace with your actual API key or load from env
+        headers = {
+            "Authorization": f"Bearer {VAST_API_KEY}"
+        }
+        params = {
+            "verified": "true",
+            "order": "dph",
+            "dir": "asc",
+            "limit": 5
+        }
+        res = requests.get("https://vast.ai/api/v0/offers", headers=headers, params=params)
+        raw = res.json()
+        offers = []
 
-    for offer in raw.get("offers", []):
-        offers.append({
-            "id": offer.get("id"),
-            "gpu": offer.get("gpu_name"),
-            "price": f"${offer.get('dph_total_usd', 0):.2f}/hr",
-            "ram": f"{offer.get('ram', 0)} GB"
-        })
+        for offer in raw.get("offers", []):
+            offers.append({
+                "id": offer.get("id"),
+                "gpu": offer.get("gpu_name"),
+                "price": f"${offer.get('dph_total_usd', 0):.2f}/hr",
+                "ram": f"{offer.get('ram', 0)} GB"
+            })
 
-    return {"offers": offers}
-
-     except Exception as e:
+        return {"offers": offers}
+    except Exception as e:
         print("ERROR:", e)
         return {"error": "Something went wrong"}, 500
 
